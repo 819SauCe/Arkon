@@ -1,0 +1,8 @@
+.env
+
+Front/node_modules
+Front/.svelte-kit
+Front/.env
+Front/*.log
+
+Back/target
