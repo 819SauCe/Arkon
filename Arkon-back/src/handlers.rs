@@ -5,7 +5,8 @@ use bcrypt::{hash, verify, DEFAULT_COST};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use chrono::{Utc, Duration};
 use crate::models::*;
-use crate::mongo::insert_product;
+use mongodb::Database;
+use crate::mongo::{insert_product, buscar_produtos_ativos};
 
 pub async fn register(State(pool): State<PgPool>, Json(payload): Json<RegisterRequest>) -> Result<Json<ApiResponse>, StatusCode> {
     let email_verify: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE email = $1 OR username = $2")
@@ -62,5 +63,18 @@ pub async fn save_product(axum::extract::State(db): axum::extract::State<mongodb
             eprintln!("Erro ao salvar produto no MongoDB: {:?}", err);
             Json("Erro ao salvar produto".into())
         }
+    }
+}
+
+pub async fn listar_produtos(State(db): State<Database>) -> Result<Json<Vec<serde_json::Value>>, StatusCode> {
+    let resultado = buscar_produtos_ativos(&db).await;
+    match resultado {
+        Ok(produtos) => {
+            let produtos_json: Vec<serde_json::Value> = produtos.into_iter()
+                .map(|doc| serde_json::to_value(doc).unwrap_or_default())
+                .collect();
+            Ok(Json(produtos_json))
+        },
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
     }
 }

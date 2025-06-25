@@ -1,8 +1,8 @@
 .env
 
-Front/node_modules
-Front/.svelte-kit
-Front/.env
-Front/*.log
+Arkon-front/node_modules
+Arkon-front/.svelte-kit
+Arkon-front/.env
+Arkon-front/*.log
 
-Back/target
+Arkon-back/target

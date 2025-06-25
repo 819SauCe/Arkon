@@ -68,7 +68,7 @@
         position: fixed;
         width: 100%;
         height: 6rem;
-        z-index: 999;
+        z-index: 2;
         background-color: transparent;
         color: white;
         display: flex;

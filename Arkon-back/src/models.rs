@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use chrono::{NaiveDateTime, Utc};
 
 #[derive(Deserialize)]
 pub struct RegisterRequest {
@@ -56,4 +55,15 @@ pub struct Product {
     pub supplier: String,
     pub created_at: String,
     pub img: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Produto_vitrine {
+    name: String,
+    price: f64,
+    discount: f64,
+    old_price: f64,
+    img: Vec<String>,
+    stock: i32,
+    store: String,
 }

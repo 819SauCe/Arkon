@@ -1,5 +1,6 @@
 <script>
 	import { fly } from 'svelte/transition';
+    import { onMount } from 'svelte';
 
     let atual = 0;
 	let direcao = 1;
@@ -17,16 +18,7 @@
         {img: "no-product.jpeg", name: "sem item", price: 0, href: "/teste"}
     ]
 
-    let products_list = [
-        {img: "no-product.jpeg", name: "camisa nike", price: 19999, old_price: 23999, cartegory: "camisa", stock: 234, href: "/teste"},
-        {img: "no-product.jpeg", name: "tenis nike", price: 129999, old_price: 203999, cartegory: "tenis", stock: 2, href: "/teste"},
-        {img: "no-product.jpeg", name: "tenis adidas", price: 15999, old_price: 33899, cartegory: "tenis", stock: 3, href: "/teste"},
-        {img: "no-product.jpeg", name: "calça adidas", price: 10000, old_price: 20099, cartegory: "calca", stock: 700, href: "/teste"},
-        {img: "no-product.jpeg", name: "camisa abidas", price: 5999, old_price: 20099, cartegory: "camisa", stock: 4, href: "/teste"},
-        {img: "no-product.jpeg", name: "camisa flamengo", price: 5999, old_price: 20099, cartegory: "camisa", stock: 234, href: "/teste"},
-        {img: "no-product.jpeg", name: "Funko pop", price: 19999, old_price: 23999, cartegory: "funko", stock: 234, href: "/teste"},
-        {img: "no-product.jpeg", name: "Funko pop", price: 12999, old_price: 23999, cartegory: "funko", stock: 123, href: "/teste"}
-    ]
+    let products_list = [];
 
 	let imagens = [
         {img: "https://t3.ftcdn.net/jpg/02/62/18/46/360_F_262184611_bXhmboL9oE6k2ILu4qXxNWFhNJCEbTn2.jpg", href: "/teste"},
@@ -92,6 +84,22 @@
 
 	proxima();
 	setInterval(proxima, 5000);
+
+    onMount(async () => {
+    const res = await fetch('http://localhost:3000/products');
+    const data = await res.json();
+    products_list = data.map(p => ({
+        name: p.name,
+        price: p.price,
+        old_price: p.old_price,
+        discount: p.discount,
+        stock: p.stock,
+        img: p.img?.[0] ?? "no-product.jpeg",
+        store: p.store,
+        href: "/produto"
+    }));
+    combos = gerarCombos(products_list, 3, 3);
+});
 </script>
 
 <main style="background-color: #141420; color: white;">
@@ -168,9 +176,11 @@
         {/each}
     </div>
 
+    {#if products_list.length > 8}
     <div style="width: 100%; display: flex; justify-content: center; margin-top: 2rem;">
         <button class="veja-mais" style="margin-bottom: 5rem; margin-top: 0.1rem; border: 3px solid white; border-radius: 7px; background-color: transparent; color: white; width: 7rem; height: 3rem; transition: all 0.3s ease-in-out;">Veja mais!</button>
     </div>
+    {/if}
 
 </div>
 

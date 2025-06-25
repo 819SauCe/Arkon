@@ -12,6 +12,7 @@ dependencies = [
  "bson",
  "chrono",
  "dotenvy",
+ "futures-util",
  "headers",
  "jsonwebtoken",
  "mongodb",
