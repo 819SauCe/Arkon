@@ -20,19 +20,15 @@ pub static JWT_SECRET: Lazy<String> = Lazy::new(|| env::var("JWT_SECRET").expect
 async fn main() {
     dotenv().expect("Falha ao carregar .env");
 
-    // Conectar com o MongoDB
     let mongo_uri = env::var("MONGO_URI").expect("MONGO_URI não setada");
     let client = Client::with_uri_str(&mongo_uri).await.expect("Falha na conexão com o MongoDB");
     let db = client.database(&env::var("MONGO_DB").unwrap_or_else(|_| "Arkon".to_string()));
-
-    // Conectar com o PostgreSQL
     let db_url = env::var("DATABASE_URL_FOR_WEB").expect("DATABASE_URL_FOR_WEB não definida");
     let pool = PgPoolOptions::new().connect(&db_url).await.unwrap();
-
     let static_files = Router::new().nest_service("/avatars", ServeDir::new("static/avatars"));
     
     let cors = CorsLayer::new()
-        .allow_origin(AllowOrigin::any())  // Permite qualquer origem (para teste)
+        .allow_origin(AllowOrigin::any())
         .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS])
         .allow_headers(AllowHeaders::from(vec![
             HeaderName::from_static("authorization"),
@@ -49,13 +45,13 @@ async fn main() {
     let mongo_routes = Router::new()
         .route("/product", post(save_product))
         .with_state(db)
-        .layer(axum::middleware::from_fn(auth::require_auth));  // Middleware de autenticação
+        .layer(axum::middleware::from_fn(auth::require_auth));
 
     let app = Router::new()
         .merge(auth_routes)
         .merge(mongo_routes)
         .merge(static_files)
-        .layer(cors);  // Aplica o middleware CORS
+        .layer(cors);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
     println!("Servidor rodando em http://localhost:3000");

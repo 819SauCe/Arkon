@@ -42,7 +42,6 @@ pub async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginRequest>
         let username: String = row.get("username");
         let role: String = row.try_get("role").unwrap_or_else(|_| "user".into());
 
-        // Verificação da senha
         if verify(&payload.password, &stored_hash).unwrap_or(false) {
             let expiration = Utc::now().checked_add_signed(Duration::hours(24)).unwrap().timestamp() as usize;
             let claims = Claims { sub: payload.email.clone(), username: username.clone(), role, exp: expiration };
@@ -54,19 +53,14 @@ pub async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginRequest>
 }
 
 pub async fn save_product(axum::extract::State(db): axum::extract::State<mongodb::Database>, Json(payload): Json<Product>) -> Json<String> {
-    // Log para verificar os dados recebidos
-    println!("Produto recebido no backend: {:#?}", payload);
-
     match insert_product(&db, payload).await {
         Ok(_) => {
-            // Log de sucesso
             println!("Produto salvo com sucesso!");
-            Json("Produto salvo com sucesso".into())  // Retornando um JSON válido
+            Json("Produto salvo com sucesso".into())
         },
         Err(err) => {
-            // Log de erro
             eprintln!("Erro ao salvar produto no MongoDB: {:?}", err);
-            Json("Erro ao salvar produto".into())  // Retornando um JSON válido com a mensagem de erro
+            Json("Erro ao salvar produto".into())
         }
     }
 }
