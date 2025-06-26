@@ -25,6 +25,25 @@
       currency: 'BRL'
     });
 
+  async function deletarProduto(id) {
+    const token = localStorage.getItem("token");
+    const res = await fetch("http://localhost:3000/d_product", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`
+      },
+      body: JSON.stringify({ id })
+    });
+
+    if (res.ok) {
+      products_list = products_list.filter(p => p._id !== id);
+      alert("Produto deletado com sucesso!");
+    } else {
+      alert("Erro ao deletar produto.");
+    }
+  }
+
   function changeStep(n) {
     step += n;
   }
@@ -41,6 +60,47 @@
     form = !form;
   }
 
+  async function salvarProduto() {
+  if (!name || !short_desc || !desc || !price || !sku || !supplier || !category) {
+    alert("Por favor, preencha todos os campos obrigatórios!");
+    return;
+  }
+
+  const token = localStorage.getItem("token");
+  const productData = {
+    name,
+    short_desc,
+    desc,
+    price,
+    old_price,
+    sku,
+    supplier,
+    stock,
+    width,
+    height,
+    weight,
+    category,
+    images
+  };
+
+  const res = await fetch('http://localhost:3000/s_product', {
+    method: 'POST',
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify(productData)
+  });
+
+  if (res.ok) {
+    const newProduct = await res.json();
+    products_list = [newProduct, ...products_list];
+    alert("Produto registrado com sucesso!");
+    toggleForm();
+  } else {
+    alert("Erro ao registrar produto.");
+  }
+}
 
   let totalPages = 0;
 
@@ -52,12 +112,11 @@
 
   $: totalPages = Math.ceil(filteredProducts.length / productsPerPage);
 
-
-
   onMount(async () => {
-  const res = await fetch('http://localhost:3000/products');
-  const data = await res.json();
-  products_list = [...data.map(p => ({
+    const res = await fetch('http://localhost:3000/products');
+    const data = await res.json();
+    products_list = [...data.map(p => ({
+      _id: p._id?.$oid ?? p._id,
       name: p.name,
       price: p.price,
       old_price: p.old_price,
@@ -66,10 +125,11 @@
       img: p.img?.[0] ?? "no-product.jpeg",
       store: p.store,
       href: "/produto",
-      category: p.category
-  }))];
-  products_list.forEach(p => { if (p.category == null || p.category == "") p.category = "Sem categoria"; });
-});
+      category: Array.isArray(p.category) ? p.category[0] ?? "Sem categoria" : p.category
+    }))];
+
+    products_list.forEach(p => { if (p.category == null || p.category == "") p.category = "Sem categoria"; });
+  });
 
 </script>
 
@@ -114,7 +174,7 @@
       <div class="modal-footer">
         {#if step > 1}<button class="btn-secondary" on:click={() => changeStep(-1)}>Voltar</button>{/if}
         {#if step < 3}<button class="btn-primary" on:click={() => changeStep(1)}>Próximo</button>{/if}
-        {#if step === 3}<button class="btn-success">Salvar Produto</button>{/if}
+        {#if step === 3}<button class="btn-success" on:click={salvarProduto}>Salvar Produto</button>{/if}
       </div>
     </div>
   {/if}
@@ -133,7 +193,7 @@
     <hr>
 
     <div class="products-grid" style="display: flex; gap: 3rem;">
-      {#each paginatedProducts as product}
+      {#each paginatedProducts as product (product._id)}
         <div class="product-card" style="background-color: #1a1a2e; padding: 18px; border: 1px solid #4d4c5a; border-radius: 10px; width: 19rem; align-items: center; justify-content: center;">
                 <a href={product.href} style="text-decoration: none; color: inherit;">
                     <img src={product.img} alt="Avatar" class="product-img" style="width: 100%; height: 12rem; display: block; margin: 0 auto; border-radius: 10px;">
@@ -157,7 +217,7 @@
 
                     <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 1rem;">
                     <button class="botao-comprar" style="margin-top: 0.1rem; border: none; border-radius: 7px; background-color: #5142fc; color: white; width: 5rem; height: 3rem;">Editar</button>
-                    <button class="botao-comprar" style="margin-top: 0.1rem; border: none; border-radius: 7px; background-color: red; color: white; width: 5rem; height: 3rem;">Excluir</button>
+                    <button class="botao-comprar" on:click={() => deletarProduto(product._id)} style="margin-top: 0.1rem; border: none; border-radius: 7px; background-color: #5142fc; color: white; width: 5rem; height: 3rem;">Excluir</button>
                     </div>
                 </div>
               </div>
@@ -174,9 +234,12 @@
   </div>
 </main>
 
+
 <style>
     main {
     width: 100%;
+    height: auto;
+    min-height: 40rem;
     background-color: var(--background);
     color: var(--font);
     padding-bottom: 1rem;

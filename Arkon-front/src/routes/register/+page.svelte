@@ -19,8 +19,6 @@
     }
 </script>
 
-
-
 <main style="background-color: #141420; color: white; width: 100%; height: 100vh; justify-content: center; display: flex;">
     <div class="login-container" style="display: flex; flex-direction: column; text-align: center; align-items: center; justify-content: center; background-color: #2c2c39; width: 30rem; height: 35rem; margin-top: 4rem; border:1px solid #4d4c5a; border-radius: 10px;">
         <h1 style="font-size: 1.7rem">Registre-se</h1>

@@ -12,7 +12,7 @@ pub async fn require_auth<B>(req: Request<B>, next: Next<B>) -> Result<Response,
                 match decode::<Claims>(token, &DecodingKey::from_secret(JWT_SECRET.as_bytes()), &Validation::default()) {
                     Ok(_) => return Ok(next.run(req).await),
                     Err(e) => {
-                        eprintln!("Erro ao decodificar token JWT: {:?}", e);  // Log do erro de decodificação
+                        eprintln!("Erro ao decodificar token JWT: {:?}", e);
                         return Err(StatusCode::UNAUTHORIZED.into_response());
                     }
                 }

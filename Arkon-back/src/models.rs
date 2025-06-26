@@ -33,6 +33,11 @@ pub struct Claims {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct Buscar_id {
+    pub id: String
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Product {
     pub store: String,
     pub sku: String,
@@ -59,6 +64,7 @@ pub struct Product {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Produto_vitrine {
+    id: String,
     name: String,
     price: f64,
     discount: f64,

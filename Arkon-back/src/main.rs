@@ -3,7 +3,7 @@ mod auth;
 mod models;
 mod mongo;
 
-use axum::{Router, routing::{post, get}, Server};
+use axum::{Router, routing::{post, get, delete}, Server};
 use tower_http::cors::{CorsLayer, AllowOrigin, AllowHeaders};
 use tower_http::services::ServeDir;
 use axum::http::{Method, HeaderName};
@@ -11,7 +11,7 @@ use std::{env, net::SocketAddr};
 use dotenvy::dotenv;
 use once_cell::sync::Lazy;
 use mongodb::Client;
-use crate::handlers::{save_product, listar_produtos};
+use crate::handlers::{s_product, listar_produtos, d_product};
 use sqlx::postgres::PgPoolOptions;
 
 pub static JWT_SECRET: Lazy<String> = Lazy::new(|| env::var("JWT_SECRET").expect("JWT_SECRET não definida"));
@@ -30,7 +30,7 @@ async fn main() {
     
     let cors = CorsLayer::new()
         .allow_origin(AllowOrigin::any())
-        .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS])
+        .allow_methods(vec![Method::GET, Method::POST, Method::OPTIONS, Method::DELETE])
         .allow_headers(AllowHeaders::from(vec![
             HeaderName::from_static("authorization"),
             HeaderName::from_static("content-type"),
@@ -44,8 +44,10 @@ async fn main() {
         .with_state(pool);
 
     let mongo_routes = Router::new()
-    .route("/product", post(save_product))
-    .with_state(db.clone());
+        .route("/s_product", post(s_product))
+        .route("/d_product", delete(d_product))
+        .with_state(db.clone())
+        .route_layer(axum::middleware::from_fn(auth::require_auth));
 
     let public_routes = Router::new()
         .route("/products", get(listar_produtos))

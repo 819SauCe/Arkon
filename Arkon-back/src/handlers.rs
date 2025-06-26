@@ -6,7 +6,7 @@ use jsonwebtoken::{encode, EncodingKey, Header};
 use chrono::{Utc, Duration};
 use crate::models::*;
 use mongodb::Database;
-use crate::mongo::{insert_product, buscar_produtos_ativos};
+use crate::mongo::{insert_product, buscar_produtos_ativos, delete_product};
 
 pub async fn register(State(pool): State<PgPool>, Json(payload): Json<RegisterRequest>) -> Result<Json<ApiResponse>, StatusCode> {
     let email_verify: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM users WHERE email = $1 OR username = $2")
@@ -53,7 +53,7 @@ pub async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginRequest>
     Err(StatusCode::UNAUTHORIZED)
 }
 
-pub async fn save_product(axum::extract::State(db): axum::extract::State<mongodb::Database>, Json(payload): Json<Product>) -> Json<String> {
+pub async fn s_product(axum::extract::State(db): axum::extract::State<mongodb::Database>, Json(payload): Json<Product>) -> Json<String> {
     match insert_product(&db, payload).await {
         Ok(_) => {
             println!("Produto salvo com sucesso!");
@@ -62,6 +62,16 @@ pub async fn save_product(axum::extract::State(db): axum::extract::State<mongodb
         Err(err) => {
             eprintln!("Erro ao salvar produto no MongoDB: {:?}", err);
             Json("Erro ao salvar produto".into())
+        }
+    }
+}
+
+pub async fn d_product(State(db): State<Database>, Json(payload): Json<Buscar_id>) -> Json<String> {
+    match delete_product(&db, payload).await {
+        Ok(_) => Json("Produto deletado com sucesso".into()),
+        Err(err) => {
+            eprintln!("Erro ao deletar produto no MongoDB: {:?}", err);
+            Json("Erro ao deletar produto".into())
         }
     }
 }
