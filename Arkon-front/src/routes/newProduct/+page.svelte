@@ -1,247 +1,316 @@
 <script>
+  import { onMount } from 'svelte';
   let step = 1;
-  let name = '', desc = '', short_desc = '';
-  let price = null, old_price = null;
-  let sku = '', supplier = '', stock = null;
-  let width = null, height = null, weight = null;
-  let category = '', tags = [];
-  let active = true, free_shipping = true;
+  let name = '';
+  let short_desc = '';
+  let desc = "";
+  let price;
+  let old_price;
+  let sku = '';
+  let supplier = '';
+  let stock;
+  let width;
+  let height;
+  let weight;
+  let category;
   let images = [];
-  let atual = 0;
-  let direcao = 1;
-  let mainImageIndex = 0;
-  let showForm = false;
+  let currentPage = 1, productsPerPage = 16;
+  let form = false;
+  let products_list = [];
+  let selectedCategory = "";  
 
-  let products_list = [
-    { img: "no-product.jpeg", name: "camisa nike", price: 19999, old_price: 23999, category: "camisa", stock: 234, href: "/teste" },
-    { img: "no-product.jpeg", name: "tenis nike", price: 129999, old_price: 203999, category: "tenis", stock: 2, href: "/teste" },
-    { img: "no-product.jpeg", name: "tenis adidas", price: 15999, old_price: 33899, category: "tenis", stock: 3, href: "/teste" },
-    { img: "no-product.jpeg", name: "calça adidas", price: 10000, old_price: 20099, category: "calca", stock: 700, href: "/teste" },
-    { img: "no-product.jpeg", name: "camisa abidas", price: 5999, old_price: 20099, category: "camisa", stock: 4, href: "/teste" },
-    { img: "no-product.jpeg", name: "camisa flamengo", price: 5999, old_price: 20099, category: "camisa", stock: 234, href: "/teste" },
-    { img: "no-product.jpeg", name: "Funko pop", price: 19999, old_price: 23999, category: "funko", stock: 234, href: "/teste" },
-    { img: "no-product.jpeg", name: "Funko pop", price: 12999, old_price: 23999, category: "funko", stock: 123, href: "/teste" }
-  ];
+  const formatarPreco = valor =>
+    (valor / 100).toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    });
 
-  function handleFileChange(event) {
-    const files = event.target.files;
-    images = [];
-    for (let i = 0; i < files.length; i++) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        images = [...images, e.target.result];
-      };
-      reader.readAsDataURL(files[i]);
-    }
+  function changeStep(n) {
+    step += n;
   }
 
-  function changeImage(direction) {
-    atual = (atual + direction + images.length) % images.length;
+  function paginate(page) {
+    currentPage = page;
   }
 
-  function setMainImage(index) {
-    mainImageIndex = index;
-    atual = index;
-  }
-
-  function navigate(stepValue) {
-    step = stepValue;
+  function handleFiles(event) {
+    images = Array.from(event.target.files).map(file => URL.createObjectURL(file));
   }
 
   function toggleForm() {
-    showForm = !showForm;
+    form = !form;
   }
 
-  function closeForm() {
-    showForm = false;
-  }
+
+  let totalPages = 0;
+
+  $: filteredProducts = selectedCategory
+    ? products_list.filter(product => product.category === selectedCategory)
+    : products_list;
+
+  $: paginatedProducts = filteredProducts.slice((currentPage - 1) * productsPerPage, currentPage * productsPerPage);
+
+  $: totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+
+
+
+  onMount(async () => {
+  const res = await fetch('http://localhost:3000/products');
+  const data = await res.json();
+  products_list = [...data.map(p => ({
+      name: p.name,
+      price: p.price,
+      old_price: p.old_price,
+      discount: p.discount,
+      stock: p.stock,
+      img: p.img?.[0] ?? "no-product.jpeg",
+      store: p.store,
+      href: "/produto",
+      category: p.category
+  }))];
+  products_list.forEach(p => { if (p.category == null || p.category == "") p.category = "Sem categoria"; });
+});
+
 </script>
 
 <main>
-  <div class="top-menu">
-    <h1>Novo produto</h1>
-    <button class="btn-add-product" on:click={toggleForm}>+</button>
-  </div>
-
-  {#if showForm}
-    {#if step === 1}
-      <div class="form">
-        <div style="display: flex;">
-          <h2>Informações Básicas</h2>
-          <a on:click={closeForm} style="margin-left: auto; cursor: pointer; color: red; font-weight: bold; text-decoration: none;">X</a>
-        </div>
-        <input placeholder="Nome" bind:value={name} />
-        <textarea placeholder="Descrição Curta" bind:value={short_desc}></textarea>
-        <input placeholder="Preço Atual" type="number" bind:value={price} />
-        <input placeholder="Preço Antigo" type="number" bind:value={old_price} />
-        <button on:click={() => navigate(2)}>Próximo</button>
+  {#if form}
+    <div class="overlay"></div>
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2>Adicionar Produto (Etapa {step}/3)</h2>
+        <button class="close-btn" on:click={toggleForm}>X</button>
       </div>
-    {/if}
 
-    {#if step === 2}
-      <div class="form">
-        <div style="display: flex;">
-        <h2>Detalhes Adicionais</h2>
-          <a on:click={closeForm} style="margin-left: auto; cursor: pointer; color: red; font-weight: bold; text-decoration: none;">X</a>
-        </div>
-        <input placeholder="SKU" bind:value={sku} />
-        <input placeholder="Fornecedor" bind:value={supplier} />
-        <input placeholder="Estoque" type="number" bind:value={stock} />
-        <input placeholder="Largura" type="number" bind:value={width} />
-        <input placeholder="Altura" type="number" bind:value={height} />
-        <input placeholder="Peso" type="number" bind:value={weight} />
-        <input placeholder="Categoria" bind:value={category} />
-        <button on:click={() => navigate(1)}>Voltar</button>
-        <button on:click={() => navigate(3)}>Próximo</button>
-      </div>
-    {/if}
+      <div class="modal-body">
+        {#if step === 1}
+          <input placeholder="Nome" bind:value={name}>
+          <textarea placeholder="Descrição curta" bind:value={short_desc}></textarea>
+          <textarea placeholder="Descrição" bind:value={desc}></textarea>
+          <input type="number" placeholder="Preço Atual" bind:value={price}>
+          <input type="number" placeholder="Preço Antigo" bind:value={old_price}>
+        {/if}
 
-    {#if step === 3}
-      <div class="form">
-        <div style="display: flex;">
-          <h2>Imagens</h2>
-          <a on:click={closeForm} style="margin-left: auto; cursor: pointer; color: red; font-weight: bold; text-decoration: none;">X</a>
-        </div>
-        <div class="carrossel-wrapper">
-          <div>
-            <!-- Exibição da imagem principal -->
-            <div class="mb-4 d-flex justify-content-center">
-              <img id="selectedImage" src={images[mainImageIndex] || "https://mdbootstrap.com/img/Photos/Others/placeholder.jpg"}
-                alt="Imagem selecionada" style="width: 25rem; height: 25rem; margin-top: -1rem;" />
-            </div>
-            <!-- Botões de navegação do carrossel -->
-            <div class="carrossel-controles" style="display: flex; justify-content: space-between;">
-              <button style="" on:click={() => changeImage(-1)}>◀</button>
-              <button style="" on:click={() => changeImage(1)}>▶</button>
-            </div>
+        {#if step === 2}
+          <input placeholder="SKU" bind:value={sku}>
+          <input placeholder="Fornecedor" bind:value={supplier}>
+          <input type="number" placeholder="Estoque" bind:value={stock}>
+          <input type="number" placeholder="Largura" bind:value={width}>
+          <input type="number" placeholder="Altura" bind:value={height}>
+          <input type="number" placeholder="Peso" bind:value={weight}>
+          <input placeholder="Categoria" bind:value={category}>
+        {/if}
+
+        {#if step === 3}
+          <input type="file" multiple on:change={handleFiles}>
+          <div class="image-preview">
+            {#each images as img}
+              <img src={img} alt="img-preview">
+            {/each}
           </div>
-
-          {#if images.length > 0}
-            <!-- Exibição do carrossel de imagens -->
-            <div class="carrossel-imagens" style="display: flex; ">
-              {#each images as image, index}
-                <div class="carrossel-item" on:click={() => setMainImage(index)}>
-                  <img src={image} alt="Imagem do Carrossel" style="width: 1rem; height: 1rem; cursor: pointer;" />
-                </div>
-              {/each}
-            </div>
-            <div style="text-align: center; margin-top: 0.5rem;">
-              <span style="color: #aaa;">Clique na imagem para definir como principal</span><br>
-              <span style="color: #fff;">Imagem principal: {mainImageIndex + 1} / {images.length}</span>
-            </div>
-          {/if}
-
-          <!-- Input de upload de imagem -->
-          <div class="d-flex justify-content-center">
-            <div data-mdb-ripple-init class="btn btn-primary btn-rounded">
-              <label class="form-label text-white m-1" for="customFile1">Escolher Arquivo</label>
-              <input type="file" class="form-control d-none" id="customFile1" multiple accept="image/*" on:change={handleFileChange} />
-            </div>
-          </div>
-        </div>
-
-        <button on:click={() => navigate(2)}>Voltar</button>
-        <button on:click={() => alert("Produto salvo (simulação).")}>Salvar</button>
+        {/if}
       </div>
-    {/if}
+
+      <div class="modal-footer">
+        {#if step > 1}<button class="btn-secondary" on:click={() => changeStep(-1)}>Voltar</button>{/if}
+        {#if step < 3}<button class="btn-primary" on:click={() => changeStep(1)}>Próximo</button>{/if}
+        {#if step === 3}<button class="btn-success">Salvar Produto</button>{/if}
+      </div>
+    </div>
   {/if}
 
-  <div class="produtos">
-    {#each products_list as product}
-      <div class="card" style="width: 18rem;">
-        <img src={product.img} class="card-img-top" alt="...">
-        <div class="card-body">
-          <h5 class="card-title">{product.name}</h5>
-          <p class="card-text">R${product.price}</p>
-        </div>
-      </div>
-    {/each}
+  <div class="container">
+    <div class="top-menu">
+      <h1>Novo produto</h1>
+      <button class="btn-add-product" on:click={toggleForm}>+</button>
+      <select class="form-select" bind:value={selectedCategory}>
+        <option value="">Todas categorias</option>
+        {#each Array.from(new Set(products_list.map(p => p.category))) as cat}
+          <option value={cat}>{cat}</option>
+        {/each}
+      </select>
+    </div>
+    <hr>
+
+    <div class="products-grid" style="display: flex; gap: 3rem;">
+      {#each paginatedProducts as product}
+        <div class="product-card" style="background-color: #1a1a2e; padding: 18px; border: 1px solid #4d4c5a; border-radius: 10px; width: 19rem; align-items: center; justify-content: center;">
+                <a href={product.href} style="text-decoration: none; color: inherit;">
+                    <img src={product.img} alt="Avatar" class="product-img" style="width: 100%; height: 12rem; display: block; margin: 0 auto; border-radius: 10px;">
+                </a>
+                <div style="display: flex; flex-direction: column;">
+                    <a href={product.href} style="text-decoration: none; color: inherit;">
+                        <p style="font-size: 1.3rem; margin-top: 1rem;">{product.name}</p>
+                    </a>
+                    
+                    <div style="display: flex; justify-content: space-between;">
+                        <div style="display: flex; flex-direction: column;">
+                          {#if product.old_price}
+                            <p style="text-decoration: line-through; font-size: 0.9rem; color: #b8b8b8;">{formatarPreco(product.old_price)}</p>
+                          {/if}
+                            <p style="color: #32a852;">{formatarPreco(product.price)}</p>
+                        </div>
+                        <p style="color: white;">Quantidade: {product.stock}</p>
+                    </div>
+
+                    <hr>
+
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 1rem;">
+                    <button class="botao-comprar" style="margin-top: 0.1rem; border: none; border-radius: 7px; background-color: #5142fc; color: white; width: 5rem; height: 3rem;">Editar</button>
+                    <button class="botao-comprar" style="margin-top: 0.1rem; border: none; border-radius: 7px; background-color: red; color: white; width: 5rem; height: 3rem;">Excluir</button>
+                    </div>
+                </div>
+              </div>
+      {/each}
+    </div>
+
+    <nav class="pagination">
+      {#each Array(totalPages) as _, index}
+        <button class="{currentPage === index + 1 ? 'active' : ''}" on:click={() => paginate(index + 1)}>
+          {index + 1}
+        </button>
+      {/each}
+    </nav>
   </div>
 </main>
 
 <style>
-  main {
-    background-color: #141420;
-    color: #fff;
+    main {
     width: 100%;
-    height: auto;
+    background-color: var(--background);
+    color: var(--font);
+    padding-bottom: 1rem;
+  }
+
+  .overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0,0,0,0.6);
+    z-index: 998;
+  }
+
+  .modal-container {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40rem; height: 30rem;
+    background-color: #212529;
+    color: aliceblue;
+    border-radius: 14px;
+    padding: 1rem;
+    z-index: 999;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .close-btn {
+    cursor: pointer;
+    color: red;
+    font-weight: bold;
+    background-color: transparent;
+    border: none;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .modal-body input,
+  .modal-body textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border-radius: 0.3rem;
+    border: 1px solid #444;
+    background: #333;
+    color: white;
+    margin-bottom: 0.5rem;
+  }
+
+  .image-preview {
+    display: flex;
+    overflow-x: auto;
+    gap: 0.5rem;
+  }
+
+  .image-preview img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+  }
+
+  .modal-footer {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    background-color: #212529;
+  }
+
+  .btn-primary, .btn-secondary, .btn-success {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+
+  .btn-primary { background-color: #007bff; color: white; }
+  .btn-secondary { background-color: #6c757d; color: white; }
+  .btn-success { background-color: #28a745; color: white; }
+
+  .container {
     padding: 1rem;
   }
 
   .top-menu {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 1rem;
   }
 
   .btn-add-product {
+    font-size: 1.5rem;
     border: none;
-    border-radius: 7px;
     background-color: #5142fc;
     color: white;
     width: 3rem;
     height: 3rem;
+    border-radius: 7px;
   }
 
-  .form {
-    position: fixed;
-    margin-left: 50%;
-    transform: translate(-50%, -20%);
-    background-color: #222;
-    padding: 20px;
-    border-radius: 10px;
-    width: 50%;
-    height: 40rem;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    z-index: 3;
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
   }
 
-  .form input, .form textarea {
-    width: 100%;
-    margin-bottom: 10px;
-    padding: 10px;
-    background-color: #333;
-    border: none;
-    border-radius: 5px;
-    color: white;
-  }
-
-  .form button {
-    width: 49%;
-    padding: 10px;
-    margin-top: 10px;
-    border: none;
-    border-radius: 5px;
-    background-color: #5142fc;
-    color: white;
-  }
-
-  .form button:hover {
-    background-color: #4038c3;
-  }
-
-  .produtos {
+  .pagination {
     display: flex;
-    flex-wrap: wrap;
     justify-content: center;
-    gap: 2rem;
-    z-index: 1;
-  }
-
-  .carrossel-wrapper {
-    position: relative;
+    gap: 0.5rem;
     margin-top: 1rem;
   }
 
-  .carrossel-img {
-    width: 100%;
-    height: 400px;
+  .pagination button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.3rem;
+    border: none;
+    background-color: #343a40;
+    color: white;
+    cursor: pointer;
   }
 
-  .carrossel-controles button {
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 2rem;
+  .pagination .active {
+    background-color: #007bff;
+  }
+
+  .form-select {
+    width: 13rem;
+    height: 3rem; 
   }
 </style>

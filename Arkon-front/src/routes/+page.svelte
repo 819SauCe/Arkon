@@ -5,7 +5,7 @@
     let atual = 0;
 	let direcao = 1;
     let itemContainer;
-
+    let products_list = [];
 
     let item = [
         {img: "no-product.jpeg", name: "sem item", price: 0, href: "/teste"},
@@ -17,8 +17,6 @@
         {img: "no-product.jpeg", name: "sem item", price: 0, href: "/teste"},
         {img: "no-product.jpeg", name: "sem item", price: 0, href: "/teste"}
     ]
-
-    let products_list = [];
 
 	let imagens = [
         {img: "https://t3.ftcdn.net/jpg/02/62/18/46/360_F_262184611_bXhmboL9oE6k2ILu4qXxNWFhNJCEbTn2.jpg", href: "/teste"},
@@ -96,7 +94,8 @@
         stock: p.stock,
         img: p.img?.[0] ?? "no-product.jpeg",
         store: p.store,
-        href: "/produto"
+        href: "/produto",
+        category: p.category
     }));
     combos = gerarCombos(products_list, 3, 3);
 });

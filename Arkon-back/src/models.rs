@@ -66,4 +66,5 @@ struct Produto_vitrine {
     img: Vec<String>,
     stock: i32,
     store: String,
+    category: String
 }

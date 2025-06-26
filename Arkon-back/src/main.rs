@@ -20,11 +20,11 @@ pub static JWT_SECRET: Lazy<String> = Lazy::new(|| env::var("JWT_SECRET").expect
 async fn main() {
     dotenv().expect("Falha ao carregar .env");
 
-    let mongo_uri = env::var("MONGO_URI").expect("MONGO_URI não setada");
-    let client = Client::with_uri_str(&mongo_uri).await.expect("Falha na conexão com o MongoDB");
-    let db = client.database(&env::var("MONGO_DB").unwrap_or_else(|_| "Arkon".to_string()));
+    let mongo_conection = env::var("MGDB").expect("MGDB não setada");
+    let client = Client::with_uri_str(&mongo_conection).await.expect("Falha na conexão com o MongoDB");
+    let db = client.database(&env::var("MGTB").unwrap_or_else(|_| "Arkon".to_string()));
     let db_clone = db.clone();
-    let db_url = env::var("DATABASE_URL_FOR_WEB").expect("DATABASE_URL_FOR_WEB não definida");
+    let db_url = env::var("PGDB").expect("PGDB não definida");
     let pool = PgPoolOptions::new().connect(&db_url).await.unwrap();
     let static_files = Router::new().nest_service("/avatars", ServeDir::new("static/avatars"));
     
