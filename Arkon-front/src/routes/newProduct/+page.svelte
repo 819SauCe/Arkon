@@ -14,6 +14,9 @@
   let weight;
   let category;
   let images = [];
+  let active = false;
+  let free_shipping = false;
+  let unit = "";
   let currentPage = 1, productsPerPage = 16;
   let form = false;
   let products_list = [];
@@ -53,7 +56,14 @@
   }
 
   function handleFiles(event) {
-    images = Array.from(event.target.files).map(file => URL.createObjectURL(file));
+    images = [];
+    for (const file of event.target.files) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        images = [...images, e.target.result];
+      };
+      reader.readAsDataURL(file);
+    }
   }
 
   function toggleForm() {
@@ -61,26 +71,22 @@
   }
 
   async function salvarProduto() {
-  if (!name || !short_desc || !desc || !price || !sku || !supplier || !category) {
-    alert("Por favor, preencha todos os campos obrigatórios!");
-    return;
-  }
-
   const token = localStorage.getItem("token");
   const productData = {
-    name,
-    short_desc,
-    desc,
-    price,
-    old_price,
     sku,
-    supplier,
-    stock,
-    width,
-    height,
-    weight,
-    category,
-    images
+    active,
+    name,
+    desc: desc || undefined,
+    short_desc: short_desc || undefined,
+    price: price ?? undefined,
+    old_price: old_price ?? undefined,
+    discount: old_price && price ? ((old_price - price)/old_price) : undefined,
+    free_shipping,
+    category: category.split(",").map(c=>c.trim()).filter(c=>c),
+    stock: stock ?? undefined,
+    unit,
+    created_at: new Date().toISOString(),
+    img: images
   };
 
   const res = await fetch('http://localhost:3000/s_product', {
@@ -152,13 +158,11 @@
         {/if}
 
         {#if step === 2}
-          <input placeholder="SKU" bind:value={sku}>
-          <input placeholder="Fornecedor" bind:value={supplier}>
+          <label><input type="checkbox" bind:checked={active}> Ativo</label>
+          <label><input type="checkbox" bind:checked={free_shipping}> Frete grátis</label>
+          <input placeholder="Unidade (ex: 'kg', 'un')" bind:value={unit}>
+          <input placeholder="Categoria (vírgula separa)" bind:value={category}>
           <input type="number" placeholder="Estoque" bind:value={stock}>
-          <input type="number" placeholder="Largura" bind:value={width}>
-          <input type="number" placeholder="Altura" bind:value={height}>
-          <input type="number" placeholder="Peso" bind:value={weight}>
-          <input placeholder="Categoria" bind:value={category}>
         {/if}
 
         {#if step === 3}
@@ -194,33 +198,48 @@
 
     <div class="products-grid" style="display: flex; gap: 3rem;">
       {#each paginatedProducts as product (product._id)}
-        <div class="product-card" style="background-color: #1a1a2e; padding: 18px; border: 1px solid #4d4c5a; border-radius: 10px; width: 19rem; align-items: center; justify-content: center;">
-                <a href={product.href} style="text-decoration: none; color: inherit;">
-                    <img src={product.img} alt="Avatar" class="product-img" style="width: 100%; height: 12rem; display: block; margin: 0 auto; border-radius: 10px;">
-                </a>
-                <div style="display: flex; flex-direction: column;">
-                    <a href={product.href} style="text-decoration: none; color: inherit;">
-                        <p style="font-size: 1.3rem; margin-top: 1rem;">{product.name}</p>
-                    </a>
-                    
-                    <div style="display: flex; justify-content: space-between;">
-                        <div style="display: flex; flex-direction: column;">
-                          {#if product.old_price}
-                            <p style="text-decoration: line-through; font-size: 0.9rem; color: #b8b8b8;">{formatarPreco(product.old_price)}</p>
-                          {/if}
-                            <p style="color: #32a852;">{formatarPreco(product.price)}</p>
+        <div class="product-card fade-in" style="position: relative; background-color: #1a1a2e; padding: 1.5rem; border: 1px solid #2e2e3e; border-radius: 1rem; width: 18rem; display: flex; flex-direction: column; align-items: center;">
+                            <button class="fav-btn" on:click={() => toggleFavorito(product)}>
+                                {#if product.favorito}
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="#ff3e6c" viewBox="0 0 24 24" width="24" height="24">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 4.13 2.44h.74C14.09 5.01 15.76 4 17.5 4 20 4 22 6 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                {:else}
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#fff" stroke-width="2" viewBox="0 0 24 24" width="24" height="24">
+                                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 6 4 4 6.5 4c1.74 0 3.41 1.01 4.13 2.44h.74C14.09 5.01 15.76 4 17.5 4 20 4 22 6 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                                    </svg>
+                                {/if}
+                            </button>
+                            <a href={product.href} style="text-decoration: none; color: inherit;">
+                                <img src={product.img} alt="Avatar" style="width: 100%; height: 16rem; object-fit: cover; border-radius: 0.75rem;"/>
+                            </a>
+                            <a href={product.href} style="text-decoration: none; color: white; margin-top: 1rem; font-size: 1.2rem;">
+                                {product.name}
+                            </a>
+                            <div style="width: 100%; margin-top: 1rem; display: flex; justify-content: space-between;">
+                                <div>
+                                    <p style="text-decoration: line-through; font-size: 0.9rem; color: #aaa;">
+                                        {formatarPreco(product.old_price)}
+                                    </p>
+                                    <p style="color: #32a852; font-size: 1rem;">
+                                        {formatarPreco(product.price)}
+                                    </p>
+                                </div>
+                                <p style="color: white; font-size: 0.9rem;">
+                                    Qtd: {product.stock}
+                                </p>
+                            </div>
+                            <hr style="border-color: #444; width: 100%; margin: 1rem 0;"/>
+                            <div style="display: flex; gap: 0.75rem; width: 100%; justify-content: center;">
+                                <button style="background-color: #5142fc; color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.5rem;">
+                                    Comprar
+                                </button>
+                                <button style="background: none; border: none; color: white; display: flex; align-items: center; gap: 0.5rem;">
+                                    <img src="cart.png" alt="cart" style="width: 1.2rem;"/>
+                                    Cesta
+                                </button>
+                            </div>
                         </div>
-                        <p style="color: white;">Quantidade: {product.stock}</p>
-                    </div>
-
-                    <hr>
-
-                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 1rem;">
-                    <button class="botao-comprar" style="margin-top: 0.1rem; border: none; border-radius: 7px; background-color: #5142fc; color: white; width: 5rem; height: 3rem;">Editar</button>
-                    <button class="botao-comprar" on:click={() => deletarProduto(product._id)} style="margin-top: 0.1rem; border: none; border-radius: 7px; background-color: #5142fc; color: white; width: 5rem; height: 3rem;">Excluir</button>
-                    </div>
-                </div>
-              </div>
       {/each}
     </div>
 
@@ -376,4 +395,43 @@
     width: 13rem;
     height: 3rem; 
   }
+   .product-card {
+ transition:
+ transform 0.3s ease,
+ box-shadow 0.3s ease
+ }
+ .product-card:hover {
+ transform: translateY(-6px);
+ box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4)
+ }
+ .fade-in {
+ opacity: 0;
+ transform: translateY(20px);
+ animation: fadeInUp 0.6s ease forwards
+ }
+ @keyframes fadeInUp {
+ to {
+ opacity: 1;
+ transform: translateY(0)
+ }
+ }
+
+ .fav-btn {
+ position: absolute;
+ top: 1.75rem;
+ right: 2rem;
+ background-color: var(--background);
+ border: none;
+ border-radius: 50%;
+ width: 2rem;
+ height: 2rem;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ cursor: pointer;
+ transition: transform 0.2s
+ }
+ .fav-btn:hover {
+ transform: scale(1.2)
+ }
 </style>

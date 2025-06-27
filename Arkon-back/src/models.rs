@@ -39,25 +39,18 @@ pub struct Buscar_id {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Product {
-    pub store: String,
     pub sku: String,
-    pub active: bool,
+    pub active: Option<bool>,
     pub name: String,
-    pub desc: String,
-    pub short_desc: String,
+    pub desc: Option<String>,
+    pub short_desc: Option<String>,
     pub price: Option<f64>,
     pub old_price: Option<f64>,
     pub discount: Option<f64>,
-    pub free_shipping: bool,
-    pub tags: Vec<String>,
+    pub free_shipping: Option<bool>,
     pub category: Vec<String>,
     pub stock: Option<i32>,
     pub unit: String,
-    pub width: Option<f64>,
-    pub height: Option<f64>,
-    pub weight: Option<f64>,
-    pub supplier_id: String,
-    pub supplier: String,
     pub created_at: String,
     pub img: Vec<String>,
 }
@@ -69,7 +62,7 @@ struct Produto_vitrine {
     price: f64,
     discount: f64,
     old_price: f64,
-    img: Vec<String>,
+    img: String,
     stock: i32,
     store: String,
     category: String
