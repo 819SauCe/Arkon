@@ -1,0 +1,14 @@
+.env
+
+Front-end/node_modules
+Front-end/.svelte-kit
+Front-end/.env
+Front-endt/*.log
+
+Front-end/target
+
+Back-end/logs
+Back-end/target
+/Back-end/target/
+*.pdb
+*.rlib
