@@ -35,5 +35,7 @@ Painel de admin moderno
 
 ## Tech Stack
 **Client:** SvelteKit and Flutter
+
+
 **Server:** Rust, PostgreSQL, MongoDB, Python
 
