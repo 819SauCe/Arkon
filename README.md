@@ -14,19 +14,23 @@ loja de temas e realizar compras B2B a preços mais acessíveis, com acesso priv
 da plataforma Arkon. Oferecemos planos com foco em ser os mais baratos do mercado. O projeto está, temporariamente,
 com o código aberto.
 
-![image](https://github.com/user-attachments/assets/e6e845bf-8e00-4a4c-a952-e35160ff94ea)
 ### EN
 Simple login with auth
 
 ### PT-BR
 Login de forma simples com autenticação
+![image](https://github.com/user-attachments/assets/e6e845bf-8e00-4a4c-a952-e35160ff94ea)
 
-![image](https://github.com/user-attachments/assets/5a664a7a-ff4c-432b-bae0-508922bbc3de)
+---
+
 ### EN
 Modern admin painel
 
-###
+### PT-BR
 Painel de admin moderno
+![image](https://github.com/user-attachments/assets/5a664a7a-ff4c-432b-bae0-508922bbc3de)
+
+---
 
 ## Tech Stack
 **Client:** SvelteKit and Flutter
