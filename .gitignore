@@ -12,3 +12,10 @@ Back-end/target
 /Back-end/target/
 *.pdb
 *.rlib
+
+*.iml
+*.lock
+*.log
+*.tmp
+*.swp
+*.DS_Store
